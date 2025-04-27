@@ -166,8 +166,7 @@ speed_estimate = distance_pred / (duration_pred / 60) if duration_pred > 0 else 
 # --- Output ---
 st.subheader("Trip Prediction Results")
 
-st.markdown(f"Estimated Distance: **{distance_pred:.2f} miles** ± {DISTANCE_RMSE:.2f}")
-st.markdown(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
-st.markdown(f"Estimated Fare: <b>${fare_pred:.2f}</b> ± <b>${FARE_RMSE:.2f}</b>", unsafe_allow_html=True)
-st.markdown(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
-
+st.write(f"Estimated Distance: **{distance_pred:.2f} miles** ± {DISTANCE_RMSE:.2f}")
+st.write(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
+st.write(f"Estimated Fare: **${fare_pred:.2f}** ± ${FARE_RMSE:.2f}")
+st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
