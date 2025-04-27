@@ -88,6 +88,21 @@ import pandas as pd
 import requests
 import io
 
+# --- Set a background image ---
+def add_bg_from_url(image_url):
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url('{image_url}');
+            background-attachment: fixed;
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 # --- Helper function to download and cache models/encoders ---
 @st.cache_resource
 def download_and_load_joblib(url):
@@ -117,6 +132,9 @@ with st.spinner("Loading machine learning models and encoders..."):
     fare_model = download_and_load_joblib(FARE_MODEL_URL)
     le_pickup = download_and_load_joblib(PICKUP_ENCODER_URL)
     le_dropoff = download_and_load_joblib(DROPOFF_ENCODER_URL)
+
+# --- Set background image ---
+add_bg_from_url("https://drive.google.com/file/d/10YTRiYxJCpX_VgVtfLyh6a-Gymh3u22r/view?usp=drive_link")  # You can replace this with your final image URL
 
 # --- UI ---
 st.title("NYC Taxi Trip Estimator")
@@ -168,5 +186,5 @@ st.subheader("Trip Prediction Results")
 
 st.write(f"Estimated Distance: **{distance_pred:.2f} miles** ± {DISTANCE_RMSE:.2f}")
 st.write(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
-st.write(f"Estimated Fare: **{fare_pred:.2f}** dollars ± {FARE_RMSE:.2f} dollars")
+st.write(f"Estimated Fare: **${fare_pred:.2f}** ± ${FARE_RMSE:.2f}")
 st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
