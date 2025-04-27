@@ -99,14 +99,10 @@ def add_bg_from_url(image_url):
             background-size: cover;
             background-position: center;
         }}
-        .main-container {{
-            padding: 2rem;
-            margin: 2rem;
-        }}
-        .main-container * {{
+        h1, h2, h3, p, div, label, span {{
             color: #333333;
-            font-size: 1.2rem;
-            text-shadow: 1px 1px 2px black;
+            font-size: 1.3rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }}
         </style>
         """,
@@ -144,62 +140,57 @@ with st.spinner("Loading machine learning models and encoders..."):
     le_dropoff = download_and_load_joblib(DROPOFF_ENCODER_URL)
 
 # --- Set background image ---
-add_bg_from_url("https://miro.medium.com/v2/resize:fit:1400/0*R8QowQaWQlH--sLX.jpg")  # Replace with final background image URL
+add_bg_from_url("https://miro.medium.com/v2/resize:fit:1400/0*R8QowQaWQlH--sLX.jpg")
 
-# --- Main container ---
-with st.container():
-    st.markdown("<div class='main-container'>", unsafe_allow_html=True)
+# --- UI ---
+st.title("NYC Taxi Trip Estimator")
+st.markdown("<p>Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.</p>", unsafe_allow_html=True)
 
-    st.title("NYC Taxi Trip Estimator")
-    st.markdown("Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.")
+# --- Sidebar Inputs ---
+st.sidebar.header("Input Trip Details")
+pickup_zone = st.sidebar.selectbox("Pickup Zone", le_pickup.classes_.tolist())
+dropoff_zone = st.sidebar.selectbox("Dropoff Zone", le_dropoff.classes_.tolist())
+hour_of_day = st.sidebar.slider("Hour of Day", 0, 23, 8)
+day_of_week = st.sidebar.selectbox("Day of Week (0=Mon, 6=Sun)", list(range(7)))
+passenger_count = st.sidebar.slider("Passenger Count", 1, 6, 1)
 
-    # --- Sidebar Inputs ---
-    st.sidebar.header("Input Trip Details")
-    pickup_zone = st.sidebar.selectbox("Pickup Zone", le_pickup.classes_.tolist())
-    dropoff_zone = st.sidebar.selectbox("Dropoff Zone", le_dropoff.classes_.tolist())
-    hour_of_day = st.sidebar.slider("Hour of Day", 0, 23, 8)
-    day_of_week = st.sidebar.selectbox("Day of Week (0=Mon, 6=Sun)", list(range(7)))
-    passenger_count = st.sidebar.slider("Passenger Count", 1, 6, 1)
+# --- Feature Engineering ---
+pickup_enc = le_pickup.transform([pickup_zone])[0]
+dropoff_enc = le_dropoff.transform([dropoff_zone])[0]
+is_rush_hour = 1 if 7 <= hour_of_day <= 17 else 0
 
-    # --- Feature Engineering ---
-    pickup_enc = le_pickup.transform([pickup_zone])[0]
-    dropoff_enc = le_dropoff.transform([dropoff_zone])[0]
-    is_rush_hour = 1 if 7 <= hour_of_day <= 17 else 0
+# --- Distance Prediction ---
+X_dist = pd.DataFrame([{
+    "pickup_zone_enc": pickup_enc,
+    "dropoff_zone_enc": dropoff_enc,
+    "hour_of_day": hour_of_day,
+    "day_of_week": day_of_week,
+    "is_rush_hour": is_rush_hour,
+    "passenger_count": passenger_count
+}])
 
-    # --- Distance Prediction ---
-    X_dist = pd.DataFrame([{
-        "pickup_zone_enc": pickup_enc,
-        "dropoff_zone_enc": dropoff_enc,
-        "hour_of_day": hour_of_day,
-        "day_of_week": day_of_week,
-        "is_rush_hour": is_rush_hour,
-        "passenger_count": passenger_count
-    }])
+distance_pred = distance_model.predict(X_dist)[0]
 
-    distance_pred = distance_model.predict(X_dist)[0]
+# --- Duration Prediction ---
+X_dur = X_dist.copy()
+X_dur['predicted_distance'] = distance_pred
 
-    # --- Duration Prediction ---
-    X_dur = X_dist.copy()
-    X_dur['predicted_distance'] = distance_pred
+log_duration_pred = duration_model.predict(X_dur)[0]
+duration_pred = np.expm1(log_duration_pred)
 
-    log_duration_pred = duration_model.predict(X_dur)[0]
-    duration_pred = np.expm1(log_duration_pred)
+# --- Fare Prediction ---
+X_fare = X_dur.copy()
+X_fare['predicted_duration'] = duration_pred
 
-    # --- Fare Prediction ---
-    X_fare = X_dur.copy()
-    X_fare['predicted_duration'] = duration_pred
+fare_pred = fare_model.predict(X_fare)[0]
 
-    fare_pred = fare_model.predict(X_fare)[0]
+# --- Speed Calculation ---
+speed_estimate = distance_pred / (duration_pred / 60) if duration_pred > 0 else 0
 
-    # --- Speed Calculation ---
-    speed_estimate = distance_pred / (duration_pred / 60) if duration_pred > 0 else 0
+# --- Output ---
+st.subheader("Trip Prediction Results")
 
-    # --- Output ---
-    st.subheader("Trip Prediction Results")
-
-    st.write(f"Estimated Distance: **{distance_pred:.2f} miles** ± {DISTANCE_RMSE:.2f}")
-    st.write(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
-    st.write(f"Estimated Fare: **{fare_pred:.2f} dollars** ± {FARE_RMSE:.2f} dollars")
-    st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
-
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Distance: <b>{distance_pred:.2f} miles</b> ± {DISTANCE_RMSE:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Duration: <b>{duration_pred:.2f} minutes</b> ± {DURATION_RMSE:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Fare: <b>${fare_pred:.2f}</b> ± ${FARE_RMSE:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Average Speed: <b>{speed_estimate:.2f} mph</b></p>", unsafe_allow_html=True)
