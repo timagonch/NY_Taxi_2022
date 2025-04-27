@@ -15,7 +15,7 @@ def download_and_load_model(url):
         st.error(f"Failed to download model from {url}")
         st.stop()
 
-# --- Model URLs (Update these if needed) ---
+# --- Model URLs (HuggingFace) ---
 DURATION_MODEL_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/trip_duration_model.pkl"
 DISTANCE_MODEL_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/trip_distance_model.pkl"
 FARE_MODEL_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/trip_fare_model.pkl"
@@ -26,11 +26,11 @@ with st.spinner("Loading machine learning models..."):
     distance_model = download_and_load_model(DISTANCE_MODEL_URL)
     fare_model = download_and_load_model(FARE_MODEL_URL)
 
-# --- Load encoders locally ---
+# --- Load encoders locally (should be in your repo root) ---
 le_pickup = joblib.load("pickup_zone_encoder.pkl")
 le_dropoff = joblib.load("dropoff_zone_encoder.pkl")
 
-# --- UI ---
+# --- Streamlit UI ---
 st.title("NYC Taxi Trip Estimator")
 st.markdown("Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.")
 
@@ -45,7 +45,6 @@ passenger_count = st.sidebar.slider("Passenger Count", 1, 6, 1)
 # --- Feature Engineering ---
 pickup_enc = le_pickup.transform([pickup_zone])[0]
 dropoff_enc = le_dropoff.transform([dropoff_zone])[0]
-
 is_rush_hour = 1 if 7 <= hour_of_day <= 17 else 0
 
 # --- Distance Prediction ---
@@ -62,14 +61,14 @@ distance_pred = distance_model.predict(X_dist)[0]
 
 # --- Duration Prediction ---
 X_dur = X_dist.copy()
-X_dur['predicted_distance'] = distance_pred
+X_dur["predicted_distance"] = distance_pred
 
 log_duration_pred = duration_model.predict(X_dur)[0]
 duration_pred = np.expm1(log_duration_pred)
 
 # --- Fare Prediction ---
 X_fare = X_dur.copy()
-X_fare['predicted_duration'] = duration_pred
+X_fare["predicted_duration"] = duration_pred
 
 fare_pred = fare_model.predict(X_fare)[0]
 
