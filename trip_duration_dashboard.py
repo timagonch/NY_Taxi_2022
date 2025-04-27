@@ -88,7 +88,7 @@ import pandas as pd
 import requests
 import io
 
-# --- Set a background image ---
+# --- Set a background image and dark transparent overlay ---
 def add_bg_from_url(image_url):
     st.markdown(
         f"""
@@ -97,6 +97,12 @@ def add_bg_from_url(image_url):
             background-image: url('{image_url}');
             background-attachment: fixed;
             background-size: cover;
+        }}
+        
+        .main-text-block {{
+            background-color: rgba(30, 30, 30, 0.7);
+            padding: 2rem;
+            border-radius: 10px;
         }}
         </style>
         """,
@@ -137,6 +143,8 @@ with st.spinner("Loading machine learning models and encoders..."):
 add_bg_from_url("https://miro.medium.com/v2/resize:fit:1400/0*R8QowQaWQlH--sLX.jpg")  # You can replace this with your final image URL
 
 # --- UI ---
+st.markdown("<div class='main-text-block'>", unsafe_allow_html=True)
+
 st.title("NYC Taxi Trip Estimator")
 st.markdown("Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.")
 
@@ -185,6 +193,12 @@ speed_estimate = distance_pred / (duration_pred / 60) if duration_pred > 0 else 
 st.subheader("Trip Prediction Results")
 
 st.write(f"Estimated Distance: **{distance_pred:.2f} miles** ± {DISTANCE_RMSE:.2f}")
+st.write(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
+st.write(f"Estimated Fare: **{fare_pred:.2f}** dollars ± {FARE_RMSE:.2f} dollars")
+st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
+
+st.markdown("</div>", unsafe_allow_html=True)
+
 st.write(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
 st.write(f"Estimated Fare: **${fare_pred:.2f}** ± ${FARE_RMSE:.2f}")
 st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
