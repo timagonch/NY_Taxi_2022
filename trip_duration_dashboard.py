@@ -88,7 +88,7 @@ import pandas as pd
 import requests
 import io
 
-# --- Set a background image and dark transparent overlay ---
+# --- Set a background image and style text ---
 def add_bg_from_url(image_url):
     st.markdown(
         f"""
@@ -98,6 +98,15 @@ def add_bg_from_url(image_url):
             background-attachment: fixed;
             background-size: cover;
             background-position: center;
+        }}
+        .main-container {{
+            padding: 2rem;
+            margin: 2rem;
+        }}
+        .main-container * {{
+            color: #333333;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px black;
         }}
         </style>
         """,
