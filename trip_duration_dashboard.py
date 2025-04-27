@@ -198,7 +198,3 @@ st.write(f"Estimated Fare: **{fare_pred:.2f}** dollars ± {FARE_RMSE:.2f} dollar
 st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
 
 st.markdown("</div>", unsafe_allow_html=True)
-
-st.write(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
-st.write(f"Estimated Fare: **${fare_pred:.2f}** ± ${FARE_RMSE:.2f}")
-st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
