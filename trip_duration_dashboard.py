@@ -168,5 +168,5 @@ st.subheader("Trip Prediction Results")
 
 st.write(f"Estimated Distance: **{distance_pred:.2f} miles** ± {DISTANCE_RMSE:.2f}")
 st.write(f"Estimated Duration: **{duration_pred:.2f} minutes** ± {DURATION_RMSE:.2f}")
-st.write(f"Estimated Fare: **{fare_pred:.2f}** ± {FARE_RMSE:.2f}")
+st.write(f"Estimated Fare: **{fare_pred:.2f}** dollars ± {FARE_RMSE:.2f}" dollars)
 st.write(f"Estimated Average Speed: **{speed_estimate:.2f} mph**")
