@@ -21,9 +21,9 @@ def add_bg_from_url(image_url):
             font-size: 1.3rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }}
-        .output-block {{
+        .big-output-block {{
             background-color: rgba(30, 30, 30, 0.7);
-            padding: 1rem;
+            padding: 2rem;
             border-radius: 10px;
             margin-bottom: 1rem;
         }}
@@ -67,7 +67,9 @@ add_bg_from_url("https://miro.medium.com/v2/resize:fit:1400/0*R8QowQaWQlH--sLX.j
 
 # --- UI ---
 st.title("NYC Taxi Trip Estimator")
-st.markdown("<div class='output-block'><p>Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.</p></div>", unsafe_allow_html=True)
+st.markdown("<div class='big-output-block'>", unsafe_allow_html=True)
+
+st.markdown("<p>Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.</p>", unsafe_allow_html=True)
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Input Trip Details")
@@ -111,8 +113,10 @@ fare_pred = fare_model.predict(X_fare)[0]
 speed_estimate = distance_pred / (duration_pred / 60) if duration_pred > 0 else 0
 
 # --- Output ---
-st.markdown("<div class='output-block'><h2>Trip Prediction Results</h2></div>", unsafe_allow_html=True)
-st.markdown(f"<div class='output-block'><p>Estimated Distance: <b>{distance_pred:.2f} miles</b> ± {DISTANCE_RMSE:.2f}</p></div>", unsafe_allow_html=True)
-st.markdown(f"<div class='output-block'><p>Estimated Duration: <b>{duration_pred:.2f} minutes</b> ± {DURATION_RMSE:.2f}</p></div>", unsafe_allow_html=True)
-st.markdown(f"<div class='output-block'><p>Estimated Fare: <b>${fare_pred:.2f}</b> ± ${FARE_RMSE:.2f}</p></div>", unsafe_allow_html=True)
-st.markdown(f"<div class='output-block'><p>Estimated Average Speed: <b>{speed_estimate:.2f} mph</b></p></div>", unsafe_allow_html=True)
+st.markdown("<h2>Trip Prediction Results</h2>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Distance: <b>{distance_pred:.2f} miles</b> ± {DISTANCE_RMSE:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Duration: <b>{duration_pred:.2f} minutes</b> ± {DURATION_RMSE:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Fare: <b>${fare_pred:.2f}</b> ± ${FARE_RMSE:.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p>Estimated Average Speed: <b>{speed_estimate:.2f} mph</b></p>", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
