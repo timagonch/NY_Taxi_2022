@@ -67,9 +67,6 @@ add_bg_from_url("https://miro.medium.com/v2/resize:fit:1400/0*R8QowQaWQlH--sLX.j
 
 # --- UI ---
 st.title("NYC Taxi Trip Estimator")
-st.markdown("<div class='big-output-block'>", unsafe_allow_html=True)
-
-st.markdown("<p>Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.</p>", unsafe_allow_html=True)
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Input Trip Details")
@@ -113,10 +110,13 @@ fare_pred = fare_model.predict(X_fare)[0]
 speed_estimate = distance_pred / (duration_pred / 60) if duration_pred > 0 else 0
 
 # --- Output ---
-st.markdown("<h2>Trip Prediction Results</h2>", unsafe_allow_html=True)
-st.markdown(f"<p>Estimated Distance: <b>{distance_pred:.2f} miles</b> ± {DISTANCE_RMSE:.2f}</p>", unsafe_allow_html=True)
-st.markdown(f"<p>Estimated Duration: <b>{duration_pred:.2f} minutes</b> ± {DURATION_RMSE:.2f}</p>", unsafe_allow_html=True)
-st.markdown(f"<p>Estimated Fare: <b>${fare_pred:.2f}</b> ± ${FARE_RMSE:.2f}</p>", unsafe_allow_html=True)
-st.markdown(f"<p>Estimated Average Speed: <b>{speed_estimate:.2f} mph</b></p>", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("""
+<div class='big-output-block'>
+<h2>Trip Prediction Results</h2>
+<p>Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.</p>
+<p>Estimated Distance: <b>{:.2f} miles</b> ± {:.2f}</p>
+<p>Estimated Duration: <b>{:.2f} minutes</b> ± {:.2f}</p>
+<p>Estimated Fare: <b>${:.2f}</b> ± ${:.2f}</p>
+<p>Estimated Average Speed: <b>{:.2f} mph</b></p>
+</div>
+""".format(distance_pred, DISTANCE_RMSE, duration_pred, DURATION_RMSE, fare_pred, FARE_RMSE, speed_estimate), unsafe_allow_html=True)
