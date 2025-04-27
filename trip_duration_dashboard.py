@@ -5,32 +5,32 @@ import pandas as pd
 import requests
 import io
 
-# --- Helper function to download and cache models ---
+# --- Helper function to download and cache models/encoders ---
 @st.cache_resource
-def download_and_load_model(url):
+def download_and_load_joblib(url):
     response = requests.get(url)
     if response.status_code == 200:
         return joblib.load(io.BytesIO(response.content))
     else:
-        st.error(f"Failed to download model from {url}")
+        st.error(f"Failed to download file from {url}")
         st.stop()
 
-# --- Model URLs (HuggingFace) ---
+# --- Model and Encoder URLs ---
 DURATION_MODEL_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/trip_duration_model.pkl"
 DISTANCE_MODEL_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/trip_distance_model.pkl"
 FARE_MODEL_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/trip_fare_model.pkl"
+PICKUP_ENCODER_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/pickup_zone_encoder.pkl"
+DROPOFF_ENCODER_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/dropoff_zone_encoder.pkl"
 
-# --- Load models from Hugging Face ---
-with st.spinner("Loading machine learning models..."):
-    duration_model = download_and_load_model(DURATION_MODEL_URL)
-    distance_model = download_and_load_model(DISTANCE_MODEL_URL)
-    fare_model = download_and_load_model(FARE_MODEL_URL)
+# --- Load models and encoders ---
+with st.spinner("Loading machine learning models and encoders..."):
+    duration_model = download_and_load_joblib(DURATION_MODEL_URL)
+    distance_model = download_and_load_joblib(DISTANCE_MODEL_URL)
+    fare_model = download_and_load_joblib(FARE_MODEL_URL)
+    le_pickup = download_and_load_joblib(PICKUP_ENCODER_URL)
+    le_dropoff = download_and_load_joblib(DROPOFF_ENCODER_URL)
 
-# --- Load encoders locally (should be in your repo root) ---
-le_pickup = joblib.load("pickup_zone_encoder.pkl")
-le_dropoff = joblib.load("dropoff_zone_encoder.pkl")
-
-# --- Streamlit UI ---
+# --- UI ---
 st.title("NYC Taxi Trip Estimator")
 st.markdown("Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.")
 
@@ -61,14 +61,14 @@ distance_pred = distance_model.predict(X_dist)[0]
 
 # --- Duration Prediction ---
 X_dur = X_dist.copy()
-X_dur["predicted_distance"] = distance_pred
+X_dur['predicted_distance'] = distance_pred
 
 log_duration_pred = duration_model.predict(X_dur)[0]
 duration_pred = np.expm1(log_duration_pred)
 
 # --- Fare Prediction ---
 X_fare = X_dur.copy()
-X_fare["predicted_duration"] = duration_pred
+X_fare['predicted_duration'] = duration_pred
 
 fare_pred = fare_model.predict(X_fare)[0]
 
