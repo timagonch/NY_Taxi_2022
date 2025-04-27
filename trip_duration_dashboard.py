@@ -134,7 +134,7 @@ with st.spinner("Loading machine learning models and encoders..."):
     le_dropoff = download_and_load_joblib(DROPOFF_ENCODER_URL)
 
 # --- Set background image ---
-add_bg_from_url("https://drive.google.com/file/d/10YTRiYxJCpX_VgVtfLyh6a-Gymh3u22r/view?usp=drive_link")  # You can replace this with your final image URL
+add_bg_from_url("https://miro.medium.com/v2/resize:fit:1400/0*R8QowQaWQlH--sLX.jpg")  # You can replace this with your final image URL
 
 # --- UI ---
 st.title("NYC Taxi Trip Estimator")
