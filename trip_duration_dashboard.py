@@ -99,12 +99,6 @@ def add_bg_from_url(image_url):
             background-size: cover;
             background-position: center;
         }}
-        .main-container {{
-            background-color: rgba(30, 30, 30, 0.7);
-            padding: 2rem;
-            border-radius: 10px;
-            margin: 2rem;
-        }}
         </style>
         """,
         unsafe_allow_html=True
