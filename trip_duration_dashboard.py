@@ -50,6 +50,7 @@ PICKUP_ENCODER_URL    = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip
 DROPOFF_ENCODER_URL   = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/dropoff_zone_encoder.pkl"
 ZONE_PAIR_ENCODER_URL = "https://huggingface.co/datasets/timagonch/nyc-taxi-trip-models/resolve/main/zone_pair_encoder.pkl"
 
+
 # --- Hardcoded RMSEs ---
 DISTANCE_RMSE = 1.34  # miles
 DURATION_RMSE = 5.76  # minutes
@@ -70,8 +71,8 @@ st.title("NYC Taxi Trip Estimator")
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Input Trip Details")
-pickup_zone     = st.sidebar.selectbox("Pickup Zone",     le_pickup.classes_.tolist())
-dropoff_zone    = st.sidebar.selectbox("Dropoff Zone",    le_dropoff.classes_.tolist())
+pickup_zone     = st.sidebar.selectbox("Pickup Zone",  le_pickup.classes_.tolist())
+dropoff_zone    = st.sidebar.selectbox("Dropoff Zone", le_dropoff.classes_.tolist())
 hour_of_day     = st.sidebar.slider("Hour of Day", 0, 23, 8)
 day_of_week     = st.sidebar.selectbox("Day of Week", list(range(7)))
 passenger_count = st.sidebar.slider("Passenger Count", 1, 6, 1)
@@ -79,24 +80,31 @@ passenger_count = st.sidebar.slider("Passenger Count", 1, 6, 1)
 # --- Encode & feature-engineer ---
 pickup_enc  = le_pickup.transform([pickup_zone])[0]
 dropoff_enc = le_dropoff.transform([dropoff_zone])[0]
-# build unordered zone-pair string
-zone_pair_str = "_".join(sorted([str(pickup_enc), str(dropoff_enc)]))
-zone_pair_enc = int(le_zone_pair.transform([zone_pair_str])[0])
+is_rush_hour_enc = 1 if 7 <= hour_of_day <= 17 else 0
 
-is_rush_hour_enc   = 1 if 7 <= hour_of_day <= 17 else 0
-hour_of_day_enc    = hour_of_day
-day_of_week_enc    = day_of_week
-passenger_count_enc= passenger_count
+# Build the unordered zone-pair string
+zone_pair_str = "_".join(sorted([str(pickup_enc), str(dropoff_enc)]))
+try:
+    zone_pair_enc = int(le_zone_pair.transform([zone_pair_str])[0])
+except ValueError:
+    st.warning(f"Zone pair {zone_pair_str} not seen in training; defaulting to 0")
+    zone_pair_enc = 0
+
+# These small-integer features match the training encoders,
+# but because we encoded 0–23→0–23, we can pass them directly:
+hour_of_day_enc     = hour_of_day
+day_of_week_enc     = day_of_week
+passenger_count_enc = passenger_count
 
 # --- Distance Prediction ---
 X_dist = pd.DataFrame([{
-    "pickup_zone_enc":    pickup_enc,
-    "dropoff_zone_enc":   dropoff_enc,
-    "zone_pair_enc":      zone_pair_enc,
-    "hour_of_day_enc":    hour_of_day_enc,
-    "day_of_week_enc":    day_of_week_enc,
-    "is_rush_hour_enc":   is_rush_hour_enc,
-    "passenger_count_enc":passenger_count_enc
+    "pickup_zone_enc":     pickup_enc,
+    "dropoff_zone_enc":    dropoff_enc,
+    "zone_pair_enc":       zone_pair_enc,
+    "hour_of_day_enc":     hour_of_day_enc,
+    "day_of_week_enc":     day_of_week_enc,
+    "is_rush_hour_enc":    is_rush_hour_enc,
+    "passenger_count_enc": passenger_count_enc
 }])
 
 distance_pred = distance_model.predict(X_dist)[0]
@@ -104,8 +112,8 @@ distance_pred = distance_model.predict(X_dist)[0]
 # --- Duration Prediction ---
 X_dur = X_dist.copy()
 X_dur['predicted_distance'] = distance_pred
-log_dur_pred = duration_model.predict(X_dur)[0]
-duration_pred = np.expm1(log_dur_pred)
+log_duration_pred = duration_model.predict(X_dur)[0]
+duration_pred     = np.expm1(log_duration_pred)
 
 # --- Fare Prediction ---
 X_fare = X_dur.copy()
@@ -113,13 +121,12 @@ X_fare['predicted_duration'] = duration_pred
 fare_pred = fare_model.predict(X_fare)[0]
 
 # --- Speed Calculation ---
-speed_estimate = distance_pred / (duration_pred/60) if duration_pred>0 else 0
+speed_estimate = distance_pred / (duration_pred / 60) if duration_pred > 0 else 0
 
 # --- Output ---
 st.markdown(f"""
 <div class='big-output-block'>
   <h2>Trip Prediction Results</h2>
-  <p>Estimate how long a taxi ride will take, how much it will cost, and how fast you'll go — based on your trip details.</p>
   <p>Estimated Distance: <b>{distance_pred:.2f} miles</b> ± {DISTANCE_RMSE:.2f}</p>
   <p>Estimated Duration: <b>{duration_pred:.2f} minutes</b> ± {DURATION_RMSE:.2f}</p>
   <p>Estimated Fare: <b>${fare_pred:.2f}</b> ± ${FARE_RMSE:.2f}</p>
